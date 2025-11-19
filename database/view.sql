@@ -1,53 +1,137 @@
--- 查看某月(當月)「支出予算」的累積結餘
+-- 月明細：日單位的列表
+CREATE VIEW v_all_transactions AS
+-- 支出
+SELECT
+    e.pay_day AS note_date, -- 日期
+    NULL AS in_amount, -- 收入金額 (支出為 NULL)
+    e.amount AS out_amount, -- 支出金額
+    NULL AS in_account_name, -- 轉入帳戶 (支出為 NULL)
+    a_out.account_name AS out_account_name, -- 轉出帳戶 (支出帳戶)
+    c_out.category_name AS category_name, -- 類別名稱
+    e.memo AS memo -- 備註
+FROM
+    expense e
+    LEFT JOIN account a_out ON a_out.rowid = e.target_account
+    LEFT JOIN category c_out ON c_out.rowid = e.target_category
+UNION ALL
+-- 收入
+SELECT
+    i.in_day AS note_date, -- 日期
+    i.amount AS in_amount, -- 收入金額
+    NULL AS out_amount, -- 支出金額 (收入為 NULL)
+    a_in.account_name AS in_account_name, -- 轉入帳戶 (收入帳戶)
+    NULL AS out_account_name, -- 轉出帳戶 (收入為 NULL)
+    c_in.category_name AS category_name, -- 類別名稱
+    i.memo AS memo -- 備註
+FROM
+    income i
+    LEFT JOIN account a_in ON a_in.rowid = i.target_account
+    LEFT JOIN category c_in ON c_in.rowid = i.target_category
+UNION ALL
+-- 轉帳支出 （投資帳戶轉入）
+SELECT
+    t.transfer_day AS note_date, -- 日期
+    NULL AS in_amount, -- 轉入金額 (視為收入)
+    t.amount AS out_amount, -- 轉出金額 (視為支出)
+    a_in.account_name AS in_account_name, -- 轉入帳戶
+    a_out.account_name AS out_account_name, -- 轉出帳戶
+    NULL AS category_name, -- 類別名稱 (轉帳無類別)
+    t.memo AS memo -- 備註
+FROM
+    trans t
+    LEFT JOIN account a_in ON a_in.rowid = t.in_account
+    LEFT JOIN account a_out ON a_out.rowid = t.out_account
+WHERE
+    a_in.invest = TRUE;
+
+UNION ALL
+-- 轉帳收入 （投資帳戶轉出, 盈利）
+SELECT
+    t.transfer_day AS note_date, -- 日期
+    t.amount AS in_amount, -- 轉入金額 (視為收入)
+    NULL AS out_amount, -- 轉出金額 (視為支出)
+    a_in.account_name AS in_account_name, -- 轉入帳戶
+    a_out.account_name AS out_account_name, -- 轉出帳戶
+    NULL AS category_name, -- 類別名稱 (轉帳無類別)
+    t.memo AS memo -- 備註
+FROM
+    trans t
+    LEFT JOIN account a_in ON a_in.rowid = t.in_account
+    LEFT JOIN account a_out ON a_out.rowid = t.out_account
+WHERE
+    a_out.invest = TRUE;
+
+-- 預算累積結餘VIEW
+CREATE VIEW IF NOT EXISTS budget_balance_view AS
 SELECT
     budget_name, -- 預算名稱
     cur_month, -- 月份
-    total_budget - total_amount as bal_amount -- 預算累積結餘
-FROM (
-        SELECT (
-                SELECT b3.budget_name
-                FROM budget b3
-                WHERE
-                    b3.rowid = b.rowid
-            ) as budget_name, strftime('%Y-%m', b.budget_month) as cur_month, SUM(e.amount) AS cur_mon_amount, (
-                SELECT SUM(budget_amount)
-                FROM budget b2
-                WHERE
-                    b2.budget_month <= b.budget_month -- 某月以前的總預算
-                    AND b2.rowid = b.rowid
-            ) as total_budget, (
-                SELECT IFNULL(SUM(e2.amount), 0) -- 沒支出計劃 或 沒有實際支出 都視為0
-                FROM expense e2
-                WHERE
-                    strftime('%Y-%m', e2.pay_day) <= strftime('%Y-%m', b.budget_month) -- 某月以前的總花費
-                    AND e2.target_plan = p.rowid -- 有設定支出計劃
-            ) as total_amount
-        FROM budget b
-            LEFT JOIN plan p ON p.target_budget = b.rowid
-            LEFT JOIN expense e ON e.target_plan = p.rowid
-        GROUP BY
-            b.rowid, strftime('%Y-%m', b.budget_month) -- 按年月分組
-    ) bal;
-
--- 查看「帳戶餘額」
-SELECT
-    cur_month, -- 月份
-    total_in - total_out as bal_amount -- 帳戶累積結餘
+    total_budget - total_amount AS bal_amount -- 預算累積結餘
 FROM (
         SELECT
-            ()
-            strftime('%Y-%m', e.pay_day) as cur_month, (
+            b.budget_name, -- 預算名稱
+            strftime('%Y-%m', b.budget_month) AS cur_month, -- 月份
+            (
+                SELECT SUM(b2.budget_amount)
+                FROM budget b2
+                WHERE
+                    b2.rowid = b.rowid
+                    AND b2.budget_month <= b.budget_month -- 某月以前的總預算
+            ) AS total_budget, -- 累積預算
+            IFNULL(
+                (
+                    SELECT SUM(e2.amount)
+                    FROM
+                        expense e2 -- 支出
+                        JOIN plan p2 ON p2.rowid = e2.target_plan -- 計畫
+                        JOIN plan_det pd2 ON pd2.plan = p2.rowid -- 計畫細項
+                    WHERE
+                        p2.target_budget = b.rowid -- 此預算的計劃
+                        AND pd2.plan_month <= b.budget_month -- 此預算,某月以前的計畫
+                        AND e2.pay_day <= date(
+                            b.budget_month, 'start of month', '+1 month', '-1 day'
+                        ) -- 此預算,某月以前的總花費
+                ), 0
+            ) AS total_amount -- 累積實際支出（只算有綁這個 budget 底下 plan 的支出）
+        FROM budget b
+        GROUP BY
+            b.rowid, b.budget_month -- 按年月分組
+    ) bal
+ORDER BY cur_month;
+
+-- 查看「帳戶餘額」：每月累積結餘（收入 - 支出）
+-- 改良版：同時考慮 income 與 expense, 避免只有支出時漏掉月份
+SELECT
+    cur_month,
+    total_in - total_out AS bal_amount
+FROM (
+        SELECT all_months.cur_month, -- 月份
+            (
                 SELECT SUM(i.amount)
                 FROM income i
                 WHERE
-                    i.in_day <= e.pay_day -- 某月以前的總收入
-            ) as total_in, (
+                    i.in_day <= date(
+                        all_months.cur_month || '-01', '+1 month', '-1 day'
+                    )
+            ) AS total_in, -- 累積收入：到當月底為止的所有收入
+            (
                 SELECT SUM(e2.amount)
                 FROM expense e2
                 WHERE
-                    strftime('%Y-%m', e2.pay_day) <= strftime('%Y-%m', e.pay_day) -- 某月以前的總花費
-            ) as total_out
-        FROM expense e
+                    e2.pay_day <= date(
+                        all_months.cur_month || '-01', '+1 month', '-1 day'
+                    )
+            ) AS total_out -- 累積支出：到當月底為止的所有支出
+        FROM (
+                -- 產生「所有出現過收入或支出的年月」當駕駛表
+                -- 這樣即使某個月只有收入、沒有支出，也會出現
+                SELECT strftime('%Y-%m', in_day) AS cur_month
+                FROM income
+                UNION
+                SELECT strftime('%Y-%m', pay_day) AS cur_month
+                FROM expense
+            ) all_months
         GROUP BY
-            strftime('%Y-%m', e.pay_day) -- 按年月分組
+            all_months.cur_month
+        ORDER BY all_months.cur_month
     ) bal;
