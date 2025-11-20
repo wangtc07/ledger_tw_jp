@@ -1,8 +1,58 @@
--- 預算>明細
--- 預算
+-- 當月收入, 當月支出, 帳戶餘額
+-- SQL_in_out_bal_list
 SELECT
-    b.budget_name,
-    b.budget_month,
+    strftime ('%Y-%m', e.pay_day) as month, -- 月份
+    (
+        SELECT
+            SUM(i.amount)
+        FROM
+            income i
+        WHERE
+            i.in_day >= date (all_months.cur_month || '-01')
+            AND i.in_day <= date (
+                all_months.cur_month || '-01', '+1 month', '-1 day'
+            )
+    ) as in_amount, -- 當月收入
+    (
+        SELECT
+            SUM(e2.amount)
+        FROM
+            expense e2
+        WHERE
+            e2.pay_day >= date (all_months.cur_month || '-01')
+            AND e2.pay_day <= date (
+                all_months.cur_month || '-01', '+1 month', '-1 day'
+            )
+    ) as out_amount, -- 當月支出
+    (
+        SELECT
+            bal_amount
+        FROM
+            account_balance_view abv
+        WHERE abv.cur_month = all_months.cur_month
+        
+    ) as bal_amount
+FROM
+    (
+        -- 產生「所有出現過收入或支出的年月」當駕駛表
+        -- 這樣即使某個月只有收入、沒有支出，也會出現
+        SELECT
+            strftime ('%Y-%m', in_day) AS cur_month
+        FROM
+            income
+        UNION
+        SELECT
+            strftime ('%Y-%m', pay_day) AS cur_month
+        FROM
+            expense
+    ) all_months
+ORDER BY all_months.cur_month;
+
+-- 預算明細
+-- SQL_budget_list
+SELECT
+    b.budget_name, -- 預算名稱
+    b.budget_month as month, -- 月份
     b.budget_amount AS cur_budget, -- 當月預算
     COALESCE(bbv.bal_amount, 0) + b.budget_amount AS cumulative_budget, -- 上個月結餘 + 當月預算 = 累積預算
     COALESCE(
@@ -29,10 +79,11 @@ FROM budget b
     )
 ORDER BY b.budget_month;
 
--- 月別支出計畫
+-- 預算明細>月別支出計畫
+-- SQL_budget_plan_list
 SELECT
     p.plan_name, -- 支出計畫
-    pd.plan_month, -- 月份
+    pd.plan_month as month, -- 月份
     pd.plan_amount AS plan_amount, -- 計畫金額
     COALESCE(SUM(e.amount), 0) AS actual_amount, -- 支出金額
     pd.plan_amount - COALESCE(SUM(e.amount), 0) AS balance -- 剩餘金額
