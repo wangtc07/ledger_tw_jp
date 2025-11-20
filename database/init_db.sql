@@ -7,9 +7,15 @@ CREATE TABLE IF NOT EXISTS account (
 
 -- 預算表：設定每月的總預算
 CREATE TABLE IF NOT EXISTS budget (
-    budget_name VARCHAR(32), -- 預算名稱
+    budget_name VARCHAR(32) -- 預算名稱
+);
+
+-- 預算細項表：：設定每月的總預算
+CREATE TABLE IF NOT EXISTS budget_det (
+    budget INTEGER, -- 關聯的預算ID
     budget_month DATE, -- 預算月份
-    budget_amount INT -- 預算金額
+    budget_amount INT, -- 預算金額
+    FOREIGN KEY (budget) REFERENCES budget (rowid)
 );
 
 -- 計畫表：預算底下的具體支出計畫
@@ -33,14 +39,6 @@ CREATE TABLE IF NOT EXISTS category (
     in_out CHAR(3), -- 收支類型 (IN/OUT)
     parent_category INT, -- 父類別ID
     FOREIGN KEY (parent_category) REFERENCES category (rowid)
-);
-
--- 類別聯結計畫中間表：類別:計畫 = 1:1, 選擇類別時畫面自動帶入計畫用
-CREATE TABLE IF NOT EXISTS category_plan (
-    category INT,
-    plan INT,
-    FOREIGN KEY (category) REFERENCES category (rowid)
-    FOREIGN KEY (plan) REFERENCES plan (rowid)
 );
 
 -- 支出表：記錄每一筆支出

@@ -1,5 +1,5 @@
 -- 月明細：日單位的列表
-CREATE VIEW v_all_transactions AS
+CREATE VIEW daily_trans_view AS
 -- 支出
 SELECT
     e.pay_day AS note_date, -- 日期
@@ -42,8 +42,7 @@ FROM
     LEFT JOIN account a_in ON a_in.rowid = t.in_account
     LEFT JOIN account a_out ON a_out.rowid = t.out_account
 WHERE
-    a_in.invest = TRUE;
-
+    a_in.invest = TRUE
 UNION ALL
 -- 轉帳收入 （投資帳戶轉出, 盈利）
 SELECT
@@ -62,21 +61,24 @@ WHERE
     a_out.invest = TRUE;
 
 -- 預算累積結餘VIEW
-CREATE VIEW IF NOT EXISTS budget_balance_view AS
+CREATE VIEW budget_balance_view AS
 SELECT
     budget_name, -- 預算名稱
     cur_month, -- 月份
+    total_budget, -- 累積預算
+    total_amount, -- 累積支出
     total_budget - total_amount AS bal_amount -- 預算累積結餘
 FROM (
         SELECT
             b.budget_name, -- 預算名稱
-            strftime('%Y-%m', b.budget_month) AS cur_month, -- 月份
+            strftime('%Y-%m', bd.budget_month) AS cur_month, -- 月份
             (
-                SELECT SUM(b2.budget_amount)
-                FROM budget b2
+                SELECT SUM(bd2.budget_amount)
+                FROM budget_det bd2
+                    JOIN budget b2 ON b2.rowid = bd2.budget
                 WHERE
-                    b2.rowid = b.rowid
-                    AND b2.budget_month <= b.budget_month -- 某月以前的總預算
+                    b2.budget_name = b.budget_name
+                    AND bd2.budget_month <= bd.budget_month -- 某月以前的總預算
             ) AS total_budget, -- 累積預算
             IFNULL(
                 (
@@ -85,25 +87,30 @@ FROM (
                         expense e2 -- 支出
                         JOIN plan p2 ON p2.rowid = e2.target_plan -- 計畫
                         JOIN plan_det pd2 ON pd2.plan = p2.rowid -- 計畫細項
+                        AND pd2.plan_month = date(e2.pay_day, 'start of month') -- 支出月份的計畫
                     WHERE
                         p2.target_budget = b.rowid -- 此預算的計劃
-                        AND pd2.plan_month <= b.budget_month -- 此預算,某月以前的計畫
+                        AND pd2.plan_month <= bd.budget_month -- 此預算,某月以前的計畫
                         AND e2.pay_day <= date(
-                            b.budget_month, 'start of month', '+1 month', '-1 day'
+                            bd.budget_month, 'start of month', '+1 month', '-1 day'
                         ) -- 此預算,某月以前的總花費
                 ), 0
             ) AS total_amount -- 累積實際支出（只算有綁這個 budget 底下 plan 的支出）
         FROM budget b
+            JOIN budget_det bd ON bd.budget = b.rowid
         GROUP BY
-            b.rowid, b.budget_month -- 按年月分組
+            b.rowid, bd.budget_month -- 按年月分組
     ) bal
 ORDER BY cur_month;
 
 -- 查看「帳戶餘額」：每月累積結餘（收入 - 支出）
 -- 改良版：同時考慮 income 與 expense, 避免只有支出時漏掉月份
+CREATE VIEW IF NOT EXISTS account_balance_view AS
 SELECT
     cur_month,
-    total_in - total_out AS bal_amount
+    total_in, -- 當月收入
+    total_out, -- 當月支出
+    total_in - total_out AS bal_amount -- 當月結餘
 FROM (
         SELECT all_months.cur_month, -- 月份
             (
