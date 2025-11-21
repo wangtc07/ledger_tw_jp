@@ -2,7 +2,16 @@
 CREATE TABLE IF NOT EXISTS account (
     account_name VARCHAR(32) NOT NULL, -- 帳戶名稱
     init_amount INT NOT NULL, -- 初始金額
+    credit BOOLEAN DEFAULT FALSE -- 信用卡 (先貸後還)
     invest BOOLEAN DEFAULT FALSE -- 投資轉帳 （轉入轉出視為收入支出）
+);
+
+-- 信用卡表：信用卡的設定
+CREATE TABLE IF NOT EXISTS credit_account (
+    account INT, -- 聯結的信用卡帳戶
+    pay_account INT, -- 預設付款帳號
+    count_day INT, -- 精算日 (信用卡記帳的起始日, 前一日為結束日)
+    debit_day INT, -- 信用卡結款日 (結款時自動預設當月的日期)
 );
 
 -- 預算表：設定每月的總預算
@@ -57,6 +66,7 @@ CREATE TABLE IF NOT EXISTS expense (
 -- 收入表：記錄每一筆收入
 CREATE TABLE IF NOT EXISTS income (
     in_day DATE, -- 收入日期
+    debit_day DATE, -- 信用卡結款日
     amount INT, -- 金額
     target_category INT DEFAULT 1, -- 關聯類別ID (預設為1)
     target_account INT, -- 關聯帳戶ID
