@@ -58,7 +58,24 @@ FROM
     LEFT JOIN account a_in ON a_in.rowid = t.in_account
     LEFT JOIN account a_out ON a_out.rowid = t.out_account
 WHERE
-    a_out.invest = TRUE;
+    a_out.invest = TRUE
+UNION ALL
+-- 轉帳單純 （一般帳戶間轉帳）
+SELECT
+    t.transfer_day AS note_date, -- 日期
+    t.amount AS in_amount, -- 轉入金額
+    t.amount AS out_amount, -- 轉出金額
+    a_in.account_name AS in_account_name, -- 轉入帳戶
+    a_out.account_name AS out_account_name, -- 轉出帳戶
+    NULL AS category_name, -- 類別名稱 (轉帳無類別)
+    t.memo AS memo -- 備註
+FROM
+    trans t
+    LEFT JOIN account a_in ON a_in.rowid = t.in_account
+    LEFT JOIN account a_out ON a_out.rowid = t.out_account
+WHERE
+    a_in.invest = FALSE
+    AND a_out.invest = FALSE;
 
 -- 預算累積結餘VIEW
 CREATE VIEW budget_balance_view AS
