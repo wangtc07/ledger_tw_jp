@@ -83,7 +83,10 @@ public struct HomeView: View {
                                             .padding()
                                         Spacer()
                                     }
-                                    .frame(height: 200) // Give it some height
+                                    .frame(maxWidth: .infinity) // 填滿寬度
+                                    .frame(height: 300) // 增加高度
+                                    .background(Color.white) // 背景顏色
+                                    .onTapGesture { } // 攔截點擊，避免穿透
                                 } else {
                                     // Budget Cards (預算卡片)
                                     ForEach(data.budgets, id: \.budgetName) { budget in
@@ -97,7 +100,22 @@ public struct HomeView: View {
                             }
                         }
                         .padding()
+                        .frame(maxWidth: .infinity) // 確保內容填滿寬度
                     }
+                    .contentShape(Rectangle()) // 確保整個區域都能感應手勢
+                    .gesture(
+                        DragGesture()
+                            .onEnded { value in
+                                // 判斷滑動方向 (Determine swipe direction)
+                                if value.translation.width < -50 {
+                                    // 向左滑動 -> 下個月 (Swipe Left -> Next Month)
+                                    viewModel.nextMonth()
+                                } else if value.translation.width > 50 {
+                                    // 向右滑動 -> 上個月 (Swipe Right -> Previous Month)
+                                    viewModel.previousMonth()
+                                }
+                            }
+                    )
                 }
                 
                 // Floating Action Buttons (懸浮按鈕)
