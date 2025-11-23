@@ -15,62 +15,66 @@ public struct HomeView: View {
                 VStack(spacing: 0) {
                     // Top Summary Area
                     VStack(spacing: 16) {
-                        // Income/Expense/Balance Row
+                        // Income/Expense/Balance Row (收入/支出/結餘列)
                         HStack {
+                            // 當月收入
                             VStack {
                                 Text("當月收入")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                    .font(.caption) // 字體大小: caption
+                                    .foregroundColor(.gray) // 字體顏色: 灰色
                                 Text("\(viewModel.homeData?.monthlyIncome ?? 0)")
-                                    .font(.headline)
-                                    .foregroundColor(.blue)
+                                    .font(.headline) // 字體大小: headline
+                                    .foregroundColor(.blue) // 字體顏色: 藍色
                             }
-                            Spacer()
+                            Spacer() // 彈性空間
+                            // 當月支出
                             VStack {
                                 Text("當月支出")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                    .font(.caption) // 字體大小: caption
+                                    .foregroundColor(.gray) // 字體顏色: 灰色
                                 Text("\(viewModel.homeData?.monthlyExpense ?? 0)")
-                                    .font(.headline)
-                                    .foregroundColor(.red)
+                                    .font(.headline) // 字體大小: headline
+                                    .foregroundColor(.red) // 字體顏色: 紅色
                             }
-                            Spacer()
+                            Spacer() // 彈性空間
+                            // 當月結餘
                             VStack {
                                 Text("當月結餘")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                    .font(.caption) // 字體大小: caption
+                                    .foregroundColor(.gray) // 字體顏色: 灰色
                                 Text("\((viewModel.homeData?.monthlyIncome ?? 0) - (viewModel.homeData?.monthlyExpense ?? 0))")
-                                    .font(.headline)
+                                    .font(.headline) // 字體大小: headline
                             }
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal) // 水平方向內距
                         
                         Divider()
                         
-                        // Month Selector
+                        // Month Selector (月份選擇器)
                         HStack {
                             Button(action: viewModel.previousMonth) {
-                                Image(systemName: "chevron.left")
+                                Image(systemName: "chevron.left") // 圖示: 向左箭頭
                             }
-                            Spacer()
+                            Spacer() // 彈性空間
                             Text(viewModel.currentMonth, style: .date)
-                                .font(.headline)
-                            Spacer()
+                                .font(.headline) // 字體大小: headline
+                            Spacer() // 彈性空間
                             Button(action: viewModel.nextMonth) {
-                                Image(systemName: "chevron.right")
+                                Image(systemName: "chevron.right") // 圖示: 向右箭頭
                             }
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal) // 水平方向內距
                     }
-                    .padding(.vertical)
-                    .background(Color.white)
-                    .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 5)
+                    .padding(.vertical) // 垂直方向內距
+                    .background(Color.white) // 背景顏色: 白色
+                    .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 5) // 陰影效果
                     
-                    // Budget List
+                    // Budget List (預算列表)
                     ScrollView {
                         VStack(spacing: 16) {
                             if let data = viewModel.homeData {
                                 if data.budgets.isEmpty {
+                                    // Empty State (無資料狀態)
                                     VStack {
                                         Spacer()
                                         Text("沒有資料")
@@ -81,11 +85,13 @@ public struct HomeView: View {
                                     }
                                     .frame(height: 200) // Give it some height
                                 } else {
+                                    // Budget Cards (預算卡片)
                                     ForEach(data.budgets, id: \.budgetName) { budget in
                                         BudgetCard(budget: budget, plans: data.plans)
                                     }
                                 }
                             } else {
+                                // Loading State (載入中狀態)
                                 ProgressView()
                                     .padding()
                             }
@@ -94,33 +100,35 @@ public struct HomeView: View {
                     }
                 }
                 
-                // Floating Action Buttons
+                // Floating Action Buttons (懸浮按鈕)
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
                         VStack(spacing: 16) {
+                            // Add Income Button (新增收入按鈕)
                             NavigationLink(destination: AddIncomeView(appDatabase: appDatabase)) {
-                                Image(systemName: "plus")
-                                    .font(.title)
-                                    .foregroundColor(.white)
-                                    .frame(width: 56, height: 56)
-                                    .background(Color.blue)
-                                    .clipShape(Circle())
-                                    .shadow(radius: 4)
+                                Image(systemName: "plus") // 圖示: 加號
+                                    .font(.title) // 字體大小: title
+                                    .foregroundColor(.white) // 字體顏色: 白色
+                                    .frame(width: 56, height: 56) // 按鈕大小: 56x56
+                                    .background(Color.blue) // 背景顏色: 藍色
+                                    .clipShape(Circle()) // 形狀: 圓形
+                                    .shadow(radius: 4) // 陰影半徑: 4
                             }
                             
+                            // Add Expense Button (新增支出按鈕)
                             NavigationLink(destination: AddExpenseView(appDatabase: appDatabase)) {
-                                Image(systemName: "minus")
-                                    .font(.title)
-                                    .foregroundColor(.white)
-                                    .frame(width: 56, height: 56)
-                                    .background(Color.red)
-                                    .clipShape(Circle())
-                                    .shadow(radius: 4)
+                                Image(systemName: "minus") // 圖示: 減號
+                                    .font(.title) // 字體大小: title
+                                    .foregroundColor(.white) // 字體顏色: 白色
+                                    .frame(width: 56, height: 56) // 按鈕大小: 56x56
+                                    .background(Color.red) // 背景顏色: 紅色
+                                    .clipShape(Circle()) // 形狀: 圓形
+                                    .shadow(radius: 4) // 陰影半徑: 4
                             }
                         }
-                        .padding()
+                        .padding() // 內距
                     }
                 }
             }
@@ -153,39 +161,63 @@ struct BudgetCard: View {
                 }
             }
             
-            // Budget Progress Bar
+            // Budget Progress Bar (預算進度條)
             VStack(spacing: 4) {
                 HStack {
                     Text("累積預算: \(budget.cumulativeBudget)")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Spacer()
+                        .font(.caption) // 字體大小: caption
+                        .foregroundColor(.gray) // 字體顏色: 灰色
+                    Spacer() // 彈性空間
                     Text("\(budget.curMonSpent) / \(budget.curBudget)")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(.caption) // 字體大小: caption
+                        .foregroundColor(.gray) // 字體顏色: 灰色
                 }
                 
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
+                        // Background Bar (背景條)
                         Rectangle()
-                            .frame(width: geometry.size.width, height: 8)
-                            .opacity(0.3)
-                            .foregroundColor(.gray)
+                            .frame(width: geometry.size.width, height: 20) // 高度: 20
+                            .opacity(0.3) // 透明度: 0.3
+                            .foregroundColor(.gray) // 顏色: 灰色
                         
+                        // Progress Bar (進度條)
                         Rectangle()
-                            .frame(width: min(CGFloat(budget.curMonSpent) / CGFloat(max(budget.curBudget, 1)) * geometry.size.width, geometry.size.width), height: 8)
-                            .foregroundColor(budget.curMonSpent > budget.curBudget ? .red : .blue)
+                            .frame(width: min(CGFloat(budget.curMonSpent) / CGFloat(max(budget.curBudget, 1)) * geometry.size.width, geometry.size.width), height: 20) // 計算進度寬度
+                            .foregroundColor(budget.curMonSpent > budget.curBudget ? .red : .blue) // 超支顯示紅色，否則藍色
+                        
+                            // Text Overlay (文字覆蓋)
+                            HStack {
+                                // Percentage (百分比)
+                                let percentage = budget.curBudget > 0 ? Int(Double(budget.curMonSpent) / Double(budget.curBudget) * 100) : 0
+                                Text("\(percentage)%")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 6)
+                                
+                                Spacer()
+                                
+                                // Balance (餘額)
+                                let balance = budget.curBudget - budget.curMonSpent
+                                Text("\(balance)")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.trailing, 6)
+                            }
+                        .frame(width: geometry.size.width, height: 20)
                     }
-                    .cornerRadius(4)
+                    .cornerRadius(10) // 圓角: 10
                 }
-                .frame(height: 8)
+                .frame(height: 20) // 高度: 20
             }
             
-            // Plans List (Expanded)
+            // Plans List (Expanded) (展開後的計畫列表)
             if isExpanded {
                 Divider()
                 
-                // Filter plans for this budget
+                // Filter plans for this budget (篩選此預算下的計畫)
                 let budgetPlans = plans.filter { $0.targetBudgetID == budget.budgetID }
                 
                 if budgetPlans.isEmpty {
@@ -200,35 +232,56 @@ struct BudgetCard: View {
                                 Text(plan.planName)
                                     .font(.subheadline)
                                 Spacer()
-                                Text("\(plan.actualAmount) / \(plan.planAmount)")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
                             }
                             
+                            // Bar (進度條)
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
+                                    // Background (背景)
                                     Rectangle()
-                                        .frame(width: geometry.size.width, height: 6)
-                                        .opacity(0.3)
-                                        .foregroundColor(.gray)
+                                        .frame(width: geometry.size.width, height: 16) // 高度: 16
+                                        .opacity(0.3) // 透明度: 0.3
+                                        .foregroundColor(.gray) // 顏色: 灰色
                                     
+                                    // Foreground (前景)
+                                    let percentage = plan.planAmount > 0 ? Int(Double(plan.actualAmount) / Double(plan.planAmount) * 100) : 0
                                     Rectangle()
-                                        .frame(width: min(CGFloat(plan.actualAmount) / CGFloat(max(plan.planAmount, 1)) * geometry.size.width, geometry.size.width), height: 6)
-                                        .foregroundColor(plan.actualAmount > plan.planAmount ? .red : .blue)
+                                        .frame(width: min(CGFloat(plan.actualAmount) / CGFloat(max(plan.planAmount, 1)) * geometry.size.width, geometry.size.width), height: 16) // 計算進度寬度
+                                        .foregroundColor(percentage > 100 ? .red : .blue) // 超過100%顯示紅色，否則藍色
+                                    
+                                    // Text Overlay (文字覆蓋)
+                                    HStack {
+                                        // Percentage (百分比)
+                                        Text("\(percentage)%")
+                                            .font(.caption2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .padding(.leading, 6)
+                                        
+                                        Spacer()
+                                        
+                                        // Balance (餘額)
+                                        Text("\(plan.balance)")
+                                            .font(.caption2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .padding(.trailing, 6)
+                                    }
+                                    .frame(width: geometry.size.width, height: 16)
                                 }
-                                .cornerRadius(3)
+                                .cornerRadius(8) // 圓角: 8
                             }
-                            .frame(height: 6)
+                            .frame(height: 16) // 高度: 16
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 4) // 垂直方向內距: 4
                     }
                 }
             }
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .padding() // 內距
+        .background(Color.white) // 背景顏色: 白色
+        .cornerRadius(12) // 圓角: 12
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2) // 陰影效果
     }
 }
 
