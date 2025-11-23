@@ -34,7 +34,10 @@ FROM
             bal_amount
         FROM budget_balance_view -- 預算累積結餘VIEW
     ) bbv ON bbv.budget_name = b.budget_name
-    AND date(bbv.cur_month, '+1 month') = date(
+    AND date(
+        bbv.cur_month || '-01',
+        '+1 month'
+    ) = date(
         bd.budget_month,
         'start of month'
     )

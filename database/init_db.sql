@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS plan_det (
 -- 類別表：收支類別
 CREATE TABLE IF NOT EXISTS category (
     category_name VARCHAR(32), -- 類別名稱
-    in_out CHAR(3), -- 收支類型 (IN/OUT)
+    in_out CHAR(3), -- 收支類型 (in/out)
     parent_category INT, -- 父類別ID
     FOREIGN KEY (parent_category) REFERENCES category (rowid)
 );
