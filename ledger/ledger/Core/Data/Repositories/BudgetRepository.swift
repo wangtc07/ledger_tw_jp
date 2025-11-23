@@ -19,6 +19,7 @@ public struct BudgetRepository {
         try await dbWriter.read { db in
             let sql = """
             SELECT
+                b.rowid as budget_id,
                 b.budget_name,
                 bd.budget_month as month,
                 bd.budget_amount AS cur_budget,
@@ -65,6 +66,7 @@ public struct BudgetRepository {
             let sql = """
             SELECT
                 p.plan_name,
+                p.target_budget as target_budget_id,
                 pd.plan_month as month,
                 pd.plan_amount AS plan_amount,
                 COALESCE(SUM(e.amount), 0) AS actual_amount,

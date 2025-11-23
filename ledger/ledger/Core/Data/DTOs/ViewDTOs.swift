@@ -58,6 +58,7 @@ public struct AccountBalance: Codable, FetchableRecord, PersistableRecord {
 }
 
 public struct BudgetListDTO: Codable, FetchableRecord {
+    public var budgetID: Int64
     public var budgetName: String
     public var month: Date
     public var curBudget: Int
@@ -65,6 +66,7 @@ public struct BudgetListDTO: Codable, FetchableRecord {
     public var curMonSpent: Int
     
     enum CodingKeys: String, CodingKey {
+        case budgetID = "budget_id"
         case budgetName = "budget_name"
         case month
         case curBudget = "cur_budget"
@@ -75,6 +77,7 @@ public struct BudgetListDTO: Codable, FetchableRecord {
 
 public struct BudgetPlanListDTO: Codable, FetchableRecord {
     public var planName: String
+    public var targetBudgetID: Int64
     public var month: Date
     public var planAmount: Int
     public var actualAmount: Int
@@ -82,6 +85,7 @@ public struct BudgetPlanListDTO: Codable, FetchableRecord {
     
     enum CodingKeys: String, CodingKey {
         case planName = "plan_name"
+        case targetBudgetID = "target_budget_id"
         case month
         case planAmount = "plan_amount"
         case actualAmount = "actual_amount"

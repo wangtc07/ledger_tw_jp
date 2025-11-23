@@ -184,13 +184,21 @@ struct BudgetCard: View {
             // Plans List (Expanded)
             if isExpanded {
                 Divider()
-                ForEach(plans.filter { $0.planName.contains(budget.budgetName) }, id: \.planName) { plan in // Naive filtering
-                    NavigationLink(destination: PlanDetailView(plan: plan)) {
+                
+                // Filter plans for this budget
+                let budgetPlans = plans.filter { $0.targetBudgetID == budget.budgetID }
+                
+                if budgetPlans.isEmpty {
+                    Text("無支出計畫")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding(.vertical, 4)
+                } else {
+                    ForEach(budgetPlans, id: \.planName) { plan in
                         VStack(spacing: 4) {
                             HStack {
                                 Text(plan.planName)
                                     .font(.subheadline)
-                                    .foregroundColor(.primary)
                                 Spacer()
                                 Text("\(plan.actualAmount) / \(plan.planAmount)")
                                     .font(.caption)
@@ -220,7 +228,7 @@ struct BudgetCard: View {
         .padding()
         .background(Color.white)
         .cornerRadius(12)
-        .shadow(color: .gray.opacity(0.1), radius: 3, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 }
 
