@@ -17,6 +17,8 @@ public struct Budget: Codable, FetchableRecord, PersistableRecord, Identifiable 
 }
 
 public struct BudgetDet: Codable, FetchableRecord, PersistableRecord {
+    public static var databaseTableName = "budget_det"
+    
     public var budgetId: Int64
     public var budgetMonth: Date
     public var budgetAmount: Int

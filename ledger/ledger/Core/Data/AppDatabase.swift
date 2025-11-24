@@ -64,6 +64,12 @@ public struct AppDatabase {
                 t.column("in_out", .text).check { $0 == "in" || $0 == "out" }
                 t.column("parent_category", .integer).references("category")
             }
+            
+            // 類別聯結計畫中間表
+            try db.create(table: "category_plan") { t in
+                t.column("category", .integer).references("category", onDelete: .cascade)
+                t.column("plan", .integer).references("plan", onDelete: .cascade)
+            }
 
             // 支出表
             try db.create(table: "expense") { t in

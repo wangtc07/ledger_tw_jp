@@ -41,6 +41,13 @@ CREATE TABLE IF NOT EXISTS category (
     FOREIGN KEY (parent_category) REFERENCES category (rowid)
 );
 
+-- 類別聯結計畫中間表：類別:計畫 = 1:1, 選擇類別時畫面自動帶入計畫用
+CREATE TABLE IF NOT EXISTS category_plan (
+    category INT,
+    plan INT,
+    FOREIGN KEY (category) REFERENCES category (rowid) FOREIGN KEY (plan) REFERENCES plan (rowid)
+);
+
 -- 支出表：記錄每一筆支出
 CREATE TABLE IF NOT EXISTS expense (
     pay_day DATE, -- 支出日期

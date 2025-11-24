@@ -23,16 +23,24 @@ struct ledgerApp: App {
             let dbQueue = try DatabaseQueue(path: dbPath)
             // 初始化 AppDatabase (包含遷移)
             self.appDatabase = try AppDatabase(dbQueue)
-            
+
             // Seed data if empty
             try appDatabase.dbWriter.write { db in
-                if try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM account") == 0 {
+                let count = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM account") ?? 0
+                print("[ledgerApp] Account count: \(count)")
+                
+                if count == 0 {
+                    print("[ledgerApp] Database is empty. Attempting to seed data from init_data.sql...")
                     if let sqlPath = Bundle.main.path(forResource: "init_data", ofType: "sql") {
+                        print("[ledgerApp] Found init_data.sql at: \(sqlPath)")
                         let sql = try String(contentsOfFile: sqlPath, encoding: .utf8)
                         try db.execute(sql: sql)
+                        print("[ledgerApp] Data seeding completed successfully.")
                     } else {
-                        print("Warning: init_data.sql not found in Bundle")
+                        print("[ledgerApp] Warning: init_data.sql not found in Bundle.")
                     }
+                } else {
+                    print("[ledgerApp] Database already has data. Skipping seeding.")
                 }
             }
         } catch {

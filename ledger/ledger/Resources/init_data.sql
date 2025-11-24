@@ -17,7 +17,8 @@ INSERT INTO
 VALUES (1, '給料', 'in', null),
     (2, '食', 'out', null),
     (3, '日用', 'out', null),
-    (4, '房租', 'out', null);
+    (4, '房租', 'out', null),
+    (5, '外食', 'out', 2);
 
 INSERT INTO
     budget (rowid, budget_name)
@@ -42,9 +43,14 @@ INSERT INTO
         plan_name,
         target_budget
     )
-VALUES (1, '食', 1), -- 變動支出
+VALUES (1, '食', 1),
     (2, '房租', 2);
--- 固定支出
+
+INSERT INTO
+    category_plan (category, plan)
+VALUES (2, 1),
+    (4, 2),
+    (5, 1);
 
 INSERT INTO
     plan_det (

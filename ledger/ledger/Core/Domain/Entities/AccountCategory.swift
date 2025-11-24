@@ -1,7 +1,7 @@
 import GRDB
 import Foundation
 
-public struct Account: Codable, FetchableRecord, PersistableRecord, Identifiable {
+public struct Account: Codable, FetchableRecord, PersistableRecord, Identifiable, Hashable {
     public var id: Int64?
     public var accountName: String
     public var initAmount: Int
@@ -22,7 +22,7 @@ public struct Account: Codable, FetchableRecord, PersistableRecord, Identifiable
     }
 }
 
-public struct Category: Codable, FetchableRecord, PersistableRecord, Identifiable {
+public struct Category: Codable, FetchableRecord, PersistableRecord, Identifiable, Hashable {
     public var id: Int64?
     public var categoryName: String
     public var inOut: String // "in" or "out"

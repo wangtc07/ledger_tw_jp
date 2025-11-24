@@ -1,7 +1,7 @@
 import GRDB
 import Foundation
 
-public struct Plan: Codable, FetchableRecord, PersistableRecord, Identifiable {
+public struct Plan: Codable, FetchableRecord, PersistableRecord, Identifiable, Hashable {
     public var id: Int64?
     public var planName: String
     public var targetBudget: Int64
@@ -20,6 +20,8 @@ public struct Plan: Codable, FetchableRecord, PersistableRecord, Identifiable {
 }
 
 public struct PlanDet: Codable, FetchableRecord, PersistableRecord {
+    public static var databaseTableName = "plan_det"
+    
     public var planId: Int64
     public var planMonth: Date
     public var planAmount: Int

@@ -28,6 +28,8 @@ public struct TransactionUseCase {
             targetAccount: accountId,
             memo: memo
         )
+        
+        print("[TransactionUseCase] Saving Expense: \(expense)")
         try await transactionRepo.saveExpense(expense)
     }
     
@@ -44,5 +46,25 @@ public struct TransactionUseCase {
     
     public func getDailyTransactions() async throws -> [DailyTrans] {
         return try await transactionRepo.getDailyTransactions()
+    }
+    
+    /// 取得所有分類
+    public func getCategories(type: String) async throws -> [Category] {
+        return try await transactionRepo.getCategories(type: type)
+    }
+    
+    /// 取得所有帳戶
+    public func getAccounts() async throws -> [Account] {
+        return try await transactionRepo.getAccounts()
+    }
+    
+    /// 取得所有計畫
+    public func getPlans() async throws -> [Plan] {
+        return try await transactionRepo.getPlans()
+    }
+    
+    /// 取得分類與計畫的對應關係
+    public func getCategoryPlans() async throws -> [CategoryPlan] {
+        return try await transactionRepo.getCategoryPlans()
     }
 }
