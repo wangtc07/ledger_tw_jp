@@ -61,10 +61,12 @@ CREATE TABLE IF NOT EXISTS category_plan (
 CREATE TABLE IF NOT EXISTS expense (
     pay_day DATE, -- 支出日期
     amount INT, -- 金額
+    debit_day DATE, -- 信用卡結款日
     target_category INT, -- 關聯類別ID
     target_plan INT, -- 關聯計畫ID
     target_account INT, -- 關聯帳戶ID
     memo VARCHAR(256), -- 備註
+    future_expense BOOLEAN, -- 未來支出(自動重複新增時為TURE, 不顯示, 但在計算預算時需要計算)
     FOREIGN KEY (target_category) REFERENCES category (rowid),
     FOREIGN KEY (target_plan) REFERENCES plan (rowid),
     FOREIGN KEY (target_account) REFERENCES account (rowid)
@@ -73,12 +75,29 @@ CREATE TABLE IF NOT EXISTS expense (
 -- 收入表：記錄每一筆收入
 CREATE TABLE IF NOT EXISTS income (
     in_day DATE, -- 收入日期
-    debit_day DATE, -- 信用卡結款日
     amount INT, -- 金額
     target_category INT DEFAULT 1, -- 關聯類別ID (預設為1)
     target_account INT, -- 關聯帳戶ID
     memo VARCHAR(256), -- 備註
+    future_income BOOLEAN, -- 未來收入(自動重複新增時為TURE, 不顯示, 但在計算預算時需要計算)
     FOREIGN KEY (target_category) REFERENCES category (rowid),
+    FOREIGN KEY (target_account) REFERENCES account (rowid)
+);
+
+-- 重複收支表
+CREATE TABLE IF NOT EXISTS repeat_in_out (
+    pay_day DATE, -- 支出日期
+    in_day DATE, -- 收入日期
+    debit_day DATE, -- 信用卡結款日
+    amount INT, -- 金額
+    target_category INT, -- 關聯類別ID
+    target_plan INT, -- 關聯計畫ID
+    target_account INT, -- 關聯帳戶ID
+    memo VARCHAR(256), -- 備註
+    repeat_freq VARCHAR(5), -- 重複頻率(DAY, MONTH, YEAR)
+    repeat_date VARCHAR(5), -- 重複日期(實際日期, MONTH:dd, YEAR:mm-dd)
+    FOREIGN KEY (target_category) REFERENCES category (rowid),
+    FOREIGN KEY (target_plan) REFERENCES plan (rowid),
     FOREIGN KEY (target_account) REFERENCES account (rowid)
 );
 
