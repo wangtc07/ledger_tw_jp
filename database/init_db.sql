@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS account (
     account_name VARCHAR(32) NOT NULL, -- 帳戶名稱
     init_amount INT NOT NULL, -- 初始金額
-    credit BOOLEAN DEFAULT FALSE -- 信用卡 (先貸後還)
+    credit BOOLEAN DEFAULT FALSE, -- 信用卡 (先貸後還)
     invest BOOLEAN DEFAULT FALSE -- 投資轉帳 （轉入轉出視為收入支出）
 );
 
@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS category_plan (
 -- 支出表：記錄每一筆支出
 CREATE TABLE IF NOT EXISTS expense (
     pay_day DATE, -- 支出日期
-    amount INT, -- 金額
     debit_day DATE, -- 信用卡結款日
+    amount INT, -- 金額
     target_category INT, -- 關聯類別ID
     target_plan INT, -- 關聯計畫ID
     target_account INT, -- 關聯帳戶ID
@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS expense (
 CREATE TABLE IF NOT EXISTS income (
     in_day DATE, -- 收入日期
     amount INT, -- 金額
+    main_income BOOLEAN DEFAULT FALSE, -- 主要收入(作為下個月的預算)
     target_category INT DEFAULT 1, -- 關聯類別ID (預設為1)
     target_account INT, -- 關聯帳戶ID
     memo VARCHAR(256), -- 備註
