@@ -136,3 +136,40 @@ CREATE TABLE IF NOT EXISTS trans (
     FOREIGN KEY (in_account) REFERENCES account (rowid),
     FOREIGN KEY (out_account) REFERENCES account (rowid)
 );
+
+-- 稅率表: 住民：1/故鄉：2（系統固定值）
+DROP TABLE IF EXISTS tax;
+
+CREATE TABLE IF NOT EXISTS tax (name VARCHAR(32));
+
+-- 稅率年份表: 住民/故鄉
+DROP TABLE IF EXISTS tax_years;
+
+CREATE TABLE IF NOT EXISTS tax_years (
+    tax INT,
+    years INT, -- 年度(2025年度： 2026/6-2027/5)
+    amount INT, -- 故鄉: 當年度可捐多少; 住民: 當年度應繳(已去年年收作計算)
+    FOREIGN KEY (tax) REFERENCES tax (rowid)
+);
+
+-- 繳稅表： 1.計算住民應繳稅金 2.輸入薪資時計算實際繳交月份的金額並追加
+DROP TABLE IF EXISTS tax_pay;
+
+CREATE TABLE IF NOT EXISTS tax_pay (
+    tax_years INT,
+    pay_day DATE,
+    payable INT, -- 應付(住民:輸入薪資時計算實際繳交月份的金額並追加)
+    amount INT, -- 實付（住民:輸入薪資時計算為退稅後的金額後更新）(當月份在上年度已追加應付,所以是更新)
+    FOREIGN KEY (tax_years) REFERENCES tax_years (rowid)
+);
+
+-- 退稅表: 1.計算故鄉應退稅金 2.輸入薪資時計算實際退稅金額並追加
+DROP TABLE IF EXISTS tax_refund;
+
+CREATE TABLE IF NOT EXISTS tax_refund (
+    tax_years INT,
+    refund_day DATE,
+    refundable INT, -- 應退(故鄉:輸入故鄉稅寄付時計算實際每月應退)
+    amount INT, -- 實退(故鄉:輸入薪資時計算當月故鄉實退)
+    FOREIGN KEY (tax_years) REFERENCES tax_years (rowid)
+);
