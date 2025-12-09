@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS credit_account (
     account INT, -- 聯結的信用卡帳戶
     pay_account INT, -- 預設付款帳號
     count_day INT, -- 精算日 (信用卡記帳的起始日, 前一日為結束日)
-    debit_day INT, -- 信用卡結款日 (結款時自動預設當月的日期)
+    debit_day INT -- 信用卡結款日 (結款時自動預設當月的日期)
 );
 
 -- 預算表：設定每月的總預算
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS plan_det (
 -- 類別表：收支類別
 CREATE TABLE IF NOT EXISTS category (
     category_name VARCHAR(32), -- 類別名稱
-    in_out CHAR(3), -- 收支類型 (IN/OUT)
+    in_out CHAR(3), -- 收支類型 (in/out)
     parent_category INT, -- 父類別ID
     FOREIGN KEY (parent_category) REFERENCES category (rowid)
 );
