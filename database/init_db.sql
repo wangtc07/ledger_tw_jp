@@ -1,4 +1,6 @@
 -- 帳戶表：儲存資產帳戶資訊
+DROP TABLE IF EXISTS account;
+
 CREATE TABLE IF NOT EXISTS account (
     account_name VARCHAR(32) NOT NULL, -- 帳戶名稱
     init_amount INT NOT NULL, -- 初始金額
@@ -7,6 +9,8 @@ CREATE TABLE IF NOT EXISTS account (
 );
 
 -- 信用卡表：信用卡的設定
+DROP TABLE IF EXISTS credit_account;
+
 CREATE TABLE IF NOT EXISTS credit_account (
     account INT, -- 聯結的信用卡帳戶
     pay_account INT, -- 預設付款帳號
@@ -15,11 +19,15 @@ CREATE TABLE IF NOT EXISTS credit_account (
 );
 
 -- 預算表：設定每月的總預算
+DROP TABLE IF EXISTS budget;
+
 CREATE TABLE IF NOT EXISTS budget (
     budget_name VARCHAR(32) -- 預算名稱
 );
 
 -- 預算細項表：：設定每月的總預算
+DROP TABLE IF EXISTS budget_det;
+
 CREATE TABLE IF NOT EXISTS budget_det (
     budget INTEGER, -- 關聯的預算ID
     budget_month DATE, -- 預算月份
@@ -28,6 +36,8 @@ CREATE TABLE IF NOT EXISTS budget_det (
 );
 
 -- 計畫表：預算底下的具體支出計畫
+DROP TABLE IF EXISTS plan;
+
 CREATE TABLE IF NOT EXISTS plan (
     plan_name VARCHAR(32), -- 計畫名稱
     target_budget INT, -- 關聯的預算ID
@@ -35,6 +45,8 @@ CREATE TABLE IF NOT EXISTS plan (
 );
 
 -- 計畫細項表：計畫在各月份的詳細分配
+DROP TABLE IF EXISTS plan_det;
+
 CREATE TABLE IF NOT EXISTS plan_det (
     plan INTEGER, -- 關聯的計畫ID
     plan_month DATE, -- 計畫月份
@@ -43,6 +55,8 @@ CREATE TABLE IF NOT EXISTS plan_det (
 );
 
 -- 類別表：收支類別
+DROP TABLE IF EXISTS category;
+
 CREATE TABLE IF NOT EXISTS category (
     category_name VARCHAR(32), -- 類別名稱
     in_out CHAR(3), -- 收支類型 (in/out)
@@ -51,6 +65,8 @@ CREATE TABLE IF NOT EXISTS category (
 );
 
 -- 類別聯結計畫中間表：類別:計畫 = 1:1, 選擇類別時畫面自動帶入計畫用
+DROP TABLE IF EXISTS category_plan;
+
 CREATE TABLE IF NOT EXISTS category_plan (
     category INT,
     plan INT,
@@ -58,6 +74,8 @@ CREATE TABLE IF NOT EXISTS category_plan (
 );
 
 -- 支出表：記錄每一筆支出
+DROP TABLE IF EXISTS expense;
+
 CREATE TABLE IF NOT EXISTS expense (
     pay_day DATE, -- 支出日期
     debit_day DATE, -- 信用卡結款日
@@ -73,6 +91,8 @@ CREATE TABLE IF NOT EXISTS expense (
 );
 
 -- 收入表：記錄每一筆收入
+DROP TABLE IF EXISTS income;
+
 CREATE TABLE IF NOT EXISTS income (
     in_day DATE, -- 收入日期
     amount INT, -- 金額
@@ -86,6 +106,8 @@ CREATE TABLE IF NOT EXISTS income (
 );
 
 -- 重複收支表
+DROP TABLE IF EXISTS repeat_in_out;
+
 CREATE TABLE IF NOT EXISTS repeat_in_out (
     pay_day DATE, -- 支出日期
     in_day DATE, -- 收入日期
@@ -103,6 +125,8 @@ CREATE TABLE IF NOT EXISTS repeat_in_out (
 );
 
 -- 轉帳表：記錄帳戶間的轉帳
+DROP TABLE IF EXISTS trans;
+
 CREATE TABLE IF NOT EXISTS trans (
     transfer_day DATE, -- 轉帳日期
     amount INT, -- 金額

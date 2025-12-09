@@ -85,66 +85,71 @@ SELECT
     total_budget, -- 累積預算
     total_amount, -- 累積支出
     total_budget - total_amount AS bal_amount -- 預算累積結餘
-FROM (
+FROM
+    (
         SELECT
             b.budget_name, -- 預算名稱
             bd.budget_month AS cur_month, -- 月份
             (
-                SELECT SUM(bd2.budget_amount)
-                FROM budget_det bd2
+                SELECT
+                    SUM(bd2.budget_amount)
+                FROM
+                    budget_det bd2
                     JOIN budget b2 ON b2.rowid = bd2.budget
                 WHERE
                     b2.budget_name = b.budget_name
                     AND bd2.budget_month <= bd.budget_month -- 某月以前的總預算
             ) AS total_budget, -- 累積預算
-            IFNULL(
+            IFNULL (
                 (
-                    SELECT SUM(ed.amount)
-                    FROM (
+                    SELECT
+                        SUM(ed.amount)
+                    FROM
+                        (
                             SELECT
-                                credit_e.rowid as rowid, credit_e.amount, CASE
+                                credit_e.rowid as rowid,
+                                credit_e.amount,
+                                CASE
                                 -- 如果是信用卡支出 and debit_day is not null ->> debit_day 當作支出日
                                     WHEN a.credit
                                     AND credit_e.debit_day IS NOT NULL THEN credit_e.debit_day
                                     -- 如果是信用卡支出 and debit_day is null and pay_day <= plan_month + 精算日 ->> plan_month +1 month + 結款日
                                     WHEN a.credit
                                     AND credit_e.debit_day IS NULL
-                                    AND credit_e.pay_day <= strftime('%Y-%m', pd2.plan_month) || ca.count_day THEN DATE(
-                                        strftime('%Y-%m', pd2.plan_month) || ca.debit_day, '+1 month'
-                                    )
+                                    AND credit_e.pay_day <= strftime ('%Y-%m', pd2.plan_month) || ca.count_day THEN DATE(strftime ('%Y-%m', pd2.plan_month) || ca.debit_day, '+1 month')
                                     -- 如果是信用卡支出 and debit_day is null and pay_day > plan_month + 精算日 ->> plan_month +2 month + 結款日
                                     WHEN a.credit
                                     AND credit_e.debit_day IS NULL
-                                    AND credit_e.pay_day <= strftime('%Y-%m', pd2.plan_month) || ca.count_day THEN DATE(
-                                        strftime('%Y-%m', pd2.plan_month) || ca.debit_day, '+2 month'
-                                    )
+                                    AND credit_e.pay_day <= strftime ('%Y-%m', pd2.plan_month) || ca.count_day THEN DATE(strftime ('%Y-%m', pd2.plan_month) || ca.debit_day, '+2 month')
                                     -- 除此之外(一般支出)
                                     ELSE credit_e.pay_day
-                                END as pay_day, p2.target_budget, pd2.plan_month
+                                END as pay_day,
+                                p2.target_budget,
+                                pd2.plan_month
                             FROM
                                 expense credit_e
                                 JOIN plan p2 ON p2.rowid = credit_e.target_plan -- 計畫
                                 JOIN plan_det pd2 ON pd2.plan = p2.rowid -- 計畫細項
-                                AND pd2.plan_month = date(
-                                    credit_e.pay_day, 'start of month'
-                                ) -- 支出月份的計畫
+                                AND pd2.plan_month = date(credit_e.pay_day, 'start of month') -- 支出月份的計畫
                                 JOIN account a ON a.rowid = credit_e.target_account -- 支出帳戶
                                 LEFT JOIN credit_account ca ON ca.account = a.rowid -- 信用卡表
                         ) ed
                     WHERE
                         ed.target_budget = b.rowid -- 此預算的計劃
                         AND ed.plan_month <= bd.budget_month -- 此預算,某月以前的計畫
-                        AND ed.pay_day <= date(
-                            bd.budget_month, 'start of month', '+1 month', '-1 day'
-                        ) -- 此預算,某月以前的總花費
-                ), 0
+                        AND ed.pay_day <= date(bd.budget_month, 'start of month', '+1 month', '-1 day') -- 此預算,某月以前的總花費
+                ),
+                0
             ) AS total_amount -- 累積實際支出（只算有綁這個 budget 底下 plan 的支出）
-        FROM budget b
+        FROM
+            budget b
             JOIN budget_det bd ON bd.budget = b.rowid
         GROUP BY
-            b.rowid, bd.budget_month -- 按年月分組
+            b.rowid,
+            bd.budget_month -- 按年月分組
     ) bal
-ORDER BY cur_month;
+ORDER BY
+    cur_month;
 
 -- 查看「帳戶餘額」：每月累積結餘（收入 - 支出）
 -- 改良版：同時考慮 income 與 expense, 避免只有支出時漏掉月份
@@ -154,34 +159,42 @@ SELECT
     total_in, -- 當月收入
     total_out, -- 當月支出
     total_in - total_out AS bal_amount -- 當月結餘
-FROM (
-        SELECT all_months.cur_month, -- 月份
+FROM
+    (
+        SELECT
+            all_months.cur_month, -- 月份
             (
-                SELECT SUM(i.amount)
-                FROM income i
+                SELECT
+                    SUM(i.amount)
+                FROM
+                    income i
                 WHERE
-                    i.in_day <= date(
-                        all_months.cur_month || '-01', '+1 month', '-1 day'
-                    )
+                    i.in_day <= date(all_months.cur_month || '-01', '+1 month', '-1 day')
             ) AS total_in, -- 累積收入：到當月底為止的所有收入
             (
-                SELECT SUM(e2.amount)
-                FROM expense e2
+                SELECT
+                    SUM(e2.amount)
+                FROM
+                    expense e2
                 WHERE
-                    e2.pay_day <= date(
-                        all_months.cur_month || '-01', '+1 month', '-1 day'
-                    )
+                    e2.pay_day <= date(all_months.cur_month || '-01', '+1 month', '-1 day')
             ) AS total_out -- 累積支出：到當月底為止的所有支出
-        FROM (
+        FROM
+            (
                 -- 產生「所有出現過收入或支出的年月」當駕駛表
                 -- 這樣即使某個月只有收入、沒有支出，也會出現
-                SELECT strftime('%Y-%m', in_day) AS cur_month
-                FROM income
+                SELECT
+                    strftime ('%Y-%m', in_day) AS cur_month
+                FROM
+                    income
                 UNION
-                SELECT strftime('%Y-%m', pay_day) AS cur_month
-                FROM expense
+                SELECT
+                    strftime ('%Y-%m', pay_day) AS cur_month
+                FROM
+                    expense
             ) all_months
         GROUP BY
             all_months.cur_month
-        ORDER BY all_months.cur_month
+        ORDER BY
+            all_months.cur_month
     ) bal;

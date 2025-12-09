@@ -1,6 +1,9 @@
 -- 當月收入, 當月支出, 當月結餘
 -- SQL_in_out_bal_list
-SELECT * FROM account_balance_view;
+SELECT
+    *
+FROM
+    account_balance_view;
 
 -- 預算明細
 -- SQL_budget_list
@@ -11,7 +14,8 @@ SELECT
     COALESCE(bbv.bal_amount, 0) + bd.budget_amount AS cumulative_budget, -- 上個月結餘 + 當月預算 = 累積預算
     COALESCE(
         (
-            SELECT SUM(e.amount)
+            SELECT
+                SUM(e.amount)
             FROM
                 expense e
                 JOIN plan p ON p.rowid = e.target_plan
@@ -32,13 +36,12 @@ FROM
             budget_name,
             cur_month,
             bal_amount
-        FROM budget_balance_view -- 預算累積結餘VIEW
+        FROM
+            budget_balance_view -- 預算累積結餘VIEW
     ) bbv ON bbv.budget_name = b.budget_name
-    AND date(bbv.cur_month, '+1 month') = date(
-        bd.budget_month,
-        'start of month'
-    )
-ORDER BY bd.budget_month;
+    AND date(bbv.cur_month, '+1 month') = date(bd.budget_month, 'start of month')
+ORDER BY
+    bd.budget_month;
 
 -- 預算明細>月別支出計畫
 -- SQL_budget_plan_list
@@ -56,4 +59,6 @@ FROM
 GROUP BY
     p.rowid,
     pd.plan_month
-ORDER BY pd.plan_month, p.plan_name;
+ORDER BY
+    pd.plan_month,
+    p.plan_name;
